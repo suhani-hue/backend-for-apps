@@ -1,0 +1,47 @@
+# docker-compose.yml
+# Local development stack using Docker Compose.
+# Runs the backend with a persistent SQLite volume.
+# To switch to PostgreSQL: uncomment the postgres service and update DATABASE_URL.
+
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: backend_for_apps
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: file:/data/prod.db   # SQLite stored on a named volume
+      JWT_SECRET: ${JWT_SECRET}          # read from host .env
+      JWT_EXPIRES_IN: 15m
+      REFRESH_TOKEN_EXPIRES_DAYS: 7
+      CORS_ORIGIN: http://localhost:3000
+    volumes:
+      - db_data:/data                    # persist SQLite across container restarts
+
+  # ── PostgreSQL (optional) ──────────────────────────────────────────────────
+  # Uncomment this service and set DATABASE_URL to the postgres:// URL below.
+  #
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: backend_postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: baas
+  #     POSTGRES_PASSWORD: baas_secret
+  #     POSTGRES_DB: baas_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pg_data:/var/lib/postgresql/data
+  #
+  # Then change api.environment.DATABASE_URL to:
+  #   DATABASE_URL: postgresql://baas:baas_secret@postgres:5432/baas_db?schema=public
+
+volumes:
+  db_data:
+  # pg_data:
