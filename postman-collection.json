@@ -1,0 +1,167 @@
+{
+  "info": {
+    "name": "backend_for_apps",
+    "description": "Complete collection for the backend_for_apps BaaS API.",
+    "_postman_id": "baas-collection-v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:4000/api" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "item_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:4000/health"
+      }
+    },
+    {
+      "name": "Register",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/register",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"alice@example.com\", \"password\": \"Passw0rd!\" }"
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set('access_token', j.access_token);",
+              "pm.collectionVariables.set('refresh_token', j.refresh_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/login",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"alice@example.com\", \"password\": \"Passw0rd!\" }"
+        }
+      }
+    },
+    {
+      "name": "Refresh Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set('access_token', j.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/token/refresh",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"refresh_token\": \"{{refresh_token}}\" }"
+        }
+      }
+    },
+    {
+      "name": "Get Me",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/me",
+        "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+      }
+    },
+    {
+      "name": "Get My Data",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/me/data",
+        "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+      }
+    },
+    {
+      "name": "Create Data Item",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const j = pm.response.json();",
+              "pm.collectionVariables.set('item_id', j.item.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/me/data",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"key\": \"theme\", \"value\": \"dark\" }"
+        }
+      }
+    },
+    {
+      "name": "Update Data Item",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/me/data/{{item_id}}",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"value\": \"light\" }"
+        }
+      }
+    },
+    {
+      "name": "Delete Data Item",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/me/data/{{item_id}}",
+        "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }]
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/logout",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"refresh_token\": \"{{refresh_token}}\" }"
+        }
+      }
+    }
+  ]
+}
