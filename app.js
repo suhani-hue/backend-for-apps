@@ -1,8 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-
-import authRoutes from "./auth(1).js";
+import authRoutes from "./authRoutes.js";
 import userRoutes from "./user.js";
 import { errorHandler } from "./errorHandler.js";
 
