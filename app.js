@@ -2,21 +2,21 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
-import authRoutes from "./routes/auth.js";
-import userRoutes from "./routes/user.js";
-import { errorHandler } from "./middleware/errorHandler.js";
+import authRoutes from "./auth(1).js";
+import userRoutes from "./user.js";
+import { errorHandler } from "./errorHandler.js";
 
 export function createApp() {
   const app = express();
 
-  const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
+  const allowedOrigins = (process.env.CORS_ORIGIN || "*")
     .split(",")
     .map((o) => o.trim());
 
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
           callback(new Error(`CORS: origin '${origin}' not allowed.`));
