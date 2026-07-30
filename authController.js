@@ -1,7 +1,3 @@
-// src/controllers/authController.js
-// Handles user registration, login, JWT refresh, and logout.
-// All DB operations go through Prisma; passwords are hashed with bcrypt.
-
 import bcrypt from "bcrypt";
 import prisma from "../utils/prisma.js";
 import {
@@ -13,19 +9,16 @@ import { validateEmail, validatePassword } from "../utils/validate.js";
 
 const BCRYPT_ROUNDS = 12;
 
-// ─── POST /api/register ───────────────────────────────────────────────────────
 export async function register(req, res, next) {
   try {
     const { email, password } = req.body;
 
-    // Validate inputs
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) return res.status(400).json({ error: emailCheck.message });
 
     const passwordCheck = validatePassword(password);
     if (!passwordCheck.valid) return res.status(400).json({ error: passwordCheck.message });
 
-    // Check for duplicate email
     const existing = await prisma.user.findUnique({
       where: { email: email.trim().toLowerCase() },
     });
@@ -33,7 +26,6 @@ export async function register(req, res, next) {
       return res.status(409).json({ error: "An account with this email already exists." });
     }
 
-    // Hash password and create user
     const hashed = await bcrypt.hash(password, BCRYPT_ROUNDS);
     const user = await prisma.user.create({
       data: { email: email.trim().toLowerCase(), password: hashed },
@@ -48,7 +40,6 @@ export async function register(req, res, next) {
   }
 }
 
-// ─── POST /api/login ──────────────────────────────────────────────────────────
 export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
@@ -57,12 +48,10 @@ export async function login(req, res, next) {
       return res.status(400).json({ error: "Email and password are required." });
     }
 
-    // Look up user
     const user = await prisma.user.findUnique({
       where: { email: email.trim().toLowerCase() },
     });
 
-    // Use a constant-time compare even on "not found" to prevent timing attacks
     const passwordValid =
       user && (await bcrypt.compare(password, user.password));
 
@@ -70,7 +59,6 @@ export async function login(req, res, next) {
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
-    // Mint tokens
     const accessToken = signAccessToken({ id: user.id, email: user.email });
     const rawRefresh = generateRefreshToken();
 
@@ -92,7 +80,6 @@ export async function login(req, res, next) {
   }
 }
 
-// ─── POST /api/token/refresh ──────────────────────────────────────────────────
 export async function refreshToken(req, res, next) {
   try {
     const { refresh_token } = req.body;
@@ -101,7 +88,6 @@ export async function refreshToken(req, res, next) {
       return res.status(400).json({ error: "refresh_token is required." });
     }
 
-    // Find the token in DB
     const stored = await prisma.refreshToken.findUnique({
       where: { token: refresh_token },
       include: { user: true },
@@ -117,7 +103,6 @@ export async function refreshToken(req, res, next) {
       return res.status(401).json({ error: "Refresh token has expired." });
     }
 
-    // Issue a new access token
     const accessToken = signAccessToken({
       id: stored.user.id,
       email: stored.user.email,
@@ -132,7 +117,6 @@ export async function refreshToken(req, res, next) {
   }
 }
 
-// ─── POST /api/logout ─────────────────────────────────────────────────────────
 export async function logout(req, res, next) {
   try {
     const { refresh_token } = req.body;
@@ -141,7 +125,6 @@ export async function logout(req, res, next) {
       return res.status(400).json({ error: "refresh_token is required." });
     }
 
-    // Revoke the token (soft-delete via flag)
     const updated = await prisma.refreshToken.updateMany({
       where: { token: refresh_token, revoked: false },
       data: { revoked: true },
