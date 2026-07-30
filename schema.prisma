@@ -1,7 +1,3 @@
-// prisma/schema.prisma
-// Defines the database schema for backend_for_apps.
-// Default datasource is SQLite for portability; swap to PostgreSQL by changing provider + DATABASE_URL.
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,20 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── User ────────────────────────────────────────────────────────────────────
 model User {
-  id           Int            @id @default(autoincrement())
-  email        String         @unique
-  password     String         // bcrypt hash
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   refreshTokens RefreshToken[]
   userData      UserData[]
 }
 
-// ─── RefreshToken ─────────────────────────────────────────────────────────────
-// Stored in DB so we can revoke (logout) individual tokens.
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
@@ -36,17 +29,15 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ─── UserData ─────────────────────────────────────────────────────────────────
-// Generic key-value JSON store per user.
 model UserData {
   id        Int      @id @default(autoincrement())
   key       String
-  value     String   // JSON-serialised value (SQLite has no native JSON type)
+  value     String
   userId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, key])  // each user has at most one record per key
+  @@unique([userId, key])
 }
